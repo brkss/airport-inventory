@@ -22,7 +22,7 @@ export const CreateProduct : React.FC = () => {
     const handleBarCodeScanned = ({ type, data } : {type: any, data: any}) => {
         setScanned(true);
         SetBarcode(data);
-        alert(`Bar code with type ${type} and data ${data} has been scanned!`);
+        alert(`Bar code  ${data} a été scanné !`);
     };
 
     if (hasPermission === null) {
@@ -42,7 +42,7 @@ export const CreateProduct : React.FC = () => {
                         
                         style = {{
                             ...StyleSheet.absoluteFillObject,
-                            height:  height / 2,
+                            height:  (height / 2) - 100,
                             width: width,
                             
                         }}
@@ -52,16 +52,17 @@ export const CreateProduct : React.FC = () => {
                 
             </View>
         
-            {true && <Button  title={'Tap to Scan Again'} onPress={() => setScanned(false)} />}
+            {scanned && <Button style={{marginHorizontal: 20}} title={'Tap to Scan Again'} onPress={() => setScanned(false)} />}
             <View style={styles.formContainer}>
                 <View style={styles.barcodeTextContainer}>
-                    <Text style={styles.label}> Bar Code : </Text>
-                    <Text style={styles.codebar}> {barcode} 889898988 </Text>
+                    <Text style={styles.label}> Bar Code  </Text>
+                    <Text style={styles.codebar}> {barcode} </Text>
                 </View>
                 
-                <Input placeholder='Titre' />
+                <Input placeholder='Numero de Comptoire' />
+                <Input placeholder='Equipement' />
                 <Input placeholder='Numero de serie' />
-                <Input placeholder='Setag' />
+                <Input placeholder='Asset Tag' />
                 <Button title='enregistrer' onPress={() => {}} />
             </View>
         </View>
@@ -73,13 +74,15 @@ const styles = StyleSheet.create({
         height: height,
     },
     cameraContainer: {
-        //height: height / 2,
-        //justifyContent: 'center',
-        //alignItems: 'center'
+        height: (height / 2) - 100,
+        justifyContent: 'center',
+        alignItems: 'center',
+        flex :.6
     },
     formContainer: {
-        marginTop: height / 2,
-        padding: 15 
+        marginTop: (height / 2) - 100,
+        padding: 15 ,
+        
     },
     barcodeTextContainer: {
         marginVertical: 10
@@ -88,6 +91,7 @@ const styles = StyleSheet.create({
         fontSize: 14
     },
     codebar: {
-        fontSize: 21
+        fontSize: 21,
+        fontWeight: 'bold'
     }
 });
