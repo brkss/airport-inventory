@@ -1,8 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, Text } from 'react-native';
+import { View, StyleSheet, Text, Dimensions } from 'react-native';
  
-export const Home : React.FC = () => {
+const {height} = Dimensions.get('window');
 
+export const Home : React.FC = () => {
 
     return(
         <View style={styles.container}>  
@@ -13,6 +14,7 @@ export const Home : React.FC = () => {
 
 const styles = StyleSheet.create({
     container: {
+        height: height,
         justifyContent: 'center',
         alignItems: 'center'
     }
