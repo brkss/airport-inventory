@@ -1,6 +1,6 @@
 import React from "react";
-import { View, StyleSheet, Text, Dimensions, Button } from 'react-native';
-import { Input } from '../components';
+import { View, StyleSheet, Text, Dimensions } from 'react-native';
+import { Input, Button } from '../components';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
 
@@ -10,6 +10,7 @@ export const CreateProduct : React.FC = () => {
 
     const [hasPermission, setHasPermission] = React.useState<any>('');
     const [scanned, setScanned] = React.useState(false);
+    const [barcode, SetBarcode] = React.useState<string>('');
 
     React.useEffect(() => {
         (async () => {
@@ -20,6 +21,7 @@ export const CreateProduct : React.FC = () => {
 
     const handleBarCodeScanned = ({ type, data } : {type: any, data: any}) => {
         setScanned(true);
+        SetBarcode(data);
         alert(`Bar code with type ${type} and data ${data} has been scanned!`);
     };
 
@@ -32,7 +34,7 @@ export const CreateProduct : React.FC = () => {
 
     return(
         <View style={styles.container}>
-            <View>
+            <View style={styles.cameraContainer}>
                 {
                     // @ts-ignore
                     <BarCodeScanner
@@ -42,16 +44,25 @@ export const CreateProduct : React.FC = () => {
                             ...StyleSheet.absoluteFillObject,
                             height:  height / 2,
                             width: width,
-                            flex: 1
+                            
                         }}
                 
                     />
                 }
+                
             </View>
-            
-            {scanned && <Button title={'Tap to Scan Again'} onPress={() => setScanned(false)} />}
+        
+            {true && <Button  title={'Tap to Scan Again'} onPress={() => setScanned(false)} />}
             <View style={styles.formContainer}>
+                <View style={styles.barcodeTextContainer}>
+                    <Text style={styles.label}> Bar Code : </Text>
+                    <Text style={styles.codebar}> {barcode} 889898988 </Text>
+                </View>
+                
                 <Input placeholder='Titre' />
+                <Input placeholder='Numero de serie' />
+                <Input placeholder='Setag' />
+                <Button title='enregistrer' onPress={() => {}} />
             </View>
         </View>
     );
@@ -60,11 +71,23 @@ export const CreateProduct : React.FC = () => {
 const styles = StyleSheet.create({
     container: {
         height: height,
+    },
+    cameraContainer: {
+        //height: height / 2,
         //justifyContent: 'center',
         //alignItems: 'center'
     },
     formContainer: {
         marginTop: height / 2,
         padding: 15 
+    },
+    barcodeTextContainer: {
+        marginVertical: 10
+    },
+    label: {
+        fontSize: 14
+    },
+    codebar: {
+        fontSize: 21
     }
 });

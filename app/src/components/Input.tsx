@@ -10,7 +10,7 @@ export const Input : React.FC<Props> = ({secureTextEntry, placeholder}) => {
 
 
     return(
-        <View>
+        <View style={styles.container}>
             <TextInput placeholder={placeholder} secureTextEntry={secureTextEntry} />
         </View>
     );
@@ -18,6 +18,9 @@ export const Input : React.FC<Props> = ({secureTextEntry, placeholder}) => {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: 'red'
+        backgroundColor: '#e6e6e3',
+        padding: 10,
+        borderRadius: 5,
+        marginVertical: 7
     }
 })
