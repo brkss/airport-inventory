@@ -1,6 +1,6 @@
 import React from "react";
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, CreateProduct, List } from '../screen';
+import { Home, CreateProduct, ListProduct } from '../screen';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 
@@ -10,7 +10,7 @@ export const Tabs : React.FC = () => {
 
     return(
         <Tab.Navigator>
-            <Tab.Screen name="List" component={List} options={{tabBarIcon: () => (
+            <Tab.Screen name="List" component={ListProduct} options={{tabBarIcon: () => (
                 <Ionicons name='ios-list-circle-outline' size={30}  />
             )}} />
             <Tab.Screen name="Creer" component={CreateProduct} options={{tabBarIcon: () => (

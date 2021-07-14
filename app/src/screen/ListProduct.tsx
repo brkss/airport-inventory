@@ -1,11 +1,11 @@
 import React from "react";
-import { View, StyleSheet, Text, Dimensions } from 'react-native';
-import { Input, Button } from '../components';
+import { View, StyleSheet, Text, Dimensions, ScrollView } from 'react-native';
+import { Product } from '../components';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
 
 const { width, height } = Dimensions.get('window');
-export const CreateProduct : React.FC = () => {
+export const ListProduct : React.FC = () => {
 
 
     const [hasPermission, setHasPermission] = React.useState<any>('');
@@ -53,17 +53,18 @@ export const CreateProduct : React.FC = () => {
             </View>
         
            {/*  {scanned && <Button style={{marginHorizontal: 20}} title={'Tap to Scan Again'} onPress={() => setScanned(false)} />} */}
-            <View style={styles.formContainer}>
-                <View style={styles.barcodeTextContainer}>
-                    <Text style={styles.label}> Bar Code  </Text>
-                    <Text style={styles.codebar}> {barcode} </Text>
-                </View>
+            <View style={styles.listContainer}>
+                <ScrollView>
+                    
+                    <Product />
+                    <Product />
+                    <Product />
+                    <Product />
+                    <Product />
+                    <Product />
+
+                </ScrollView>
                 
-                <Input placeholder='Numero de Comptoire' />
-                <Input placeholder='Equipement' />
-                <Input placeholder='Numero de serie' />
-                <Input placeholder='Asset Tag' />
-                <Button title='enregistrer' onPress={() => {}} />
             </View>
         </View>
     );
@@ -74,16 +75,11 @@ const styles = StyleSheet.create({
         height: height,
     },
     cameraContainer: {
-        //height: (height / 2) - 100,
+        height: (height / 2) - 100,
         justifyContent: 'center',
         alignItems: 'center',
-        //flex :.6
     },
-    formContainer: {
-        marginTop: (height / 2) - 100,
-        padding: 15 ,
-        
-    },
+    
     barcodeTextContainer: {
         marginVertical: 10
     },
@@ -93,5 +89,9 @@ const styles = StyleSheet.create({
     codebar: {
         fontSize: 21,
         fontWeight: 'bold'
+    },
+    listContainer: {
+        paddingVertical: 30,
+        marginBottom: 50
     }
 });
