@@ -1,15 +1,15 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { IProduct } from '../types/Product';
 
-
-export const Product : React.FC = () => {
+export const Product : React.FC<IProduct> = (props) => {
 
 
 
     return (
         <View style={styles.container}>
-            <Text style={styles.codeBar}>4580938599944</Text>
-            <Text style={styles.title}>Unite Central HP 8 GB Ram !</Text>
+            <Text style={styles.codeBar}>{props.codebar}</Text>
+            <Text style={styles.title}>{props.tag}</Text>
         </View>
     );
 }

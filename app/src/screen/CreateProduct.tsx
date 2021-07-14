@@ -2,7 +2,8 @@ import React from "react";
 import { View, StyleSheet, Text, Dimensions } from 'react-native';
 import { Input, Button } from '../components';
 import { BarCodeScanner } from 'expo-barcode-scanner';
-
+import { IProduct } from '../types/Product';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
 export const CreateProduct : React.FC = () => {
@@ -11,6 +12,7 @@ export const CreateProduct : React.FC = () => {
     const [hasPermission, setHasPermission] = React.useState<any>('');
     const [scanned, setScanned] = React.useState(false);
     const [barcode, SetBarcode] = React.useState<string>('');
+    const [form, SetForm] = React.useState<any>();
 
     React.useEffect(() => {
         (async () => {
@@ -24,6 +26,54 @@ export const CreateProduct : React.FC = () => {
         SetBarcode(data);
         alert(`Bar code  ${data} a été scanné !`);
     };
+
+    // handle product form 
+    const handleForm = (key: string, value: string) => {
+        console.log(`${key} : ${value}`);
+        SetForm({
+            ...form,
+            [key]: value
+        });
+    }
+    // handle saving product 
+    const handleSavingProduct = () => {
+        console.log("form -> ", form);
+        if(!form || !form.nmrcmp || !form.equipement || !form.nmrserie || !form.tag){
+            alert("Champs manquants !");
+        }else{
+            const _data : IProduct = {
+                codebar: barcode || '-0',
+                equipement: form.equipement,
+                nmrcmp: form.nmrcmp,
+                nmrserie: form.nmrserie,
+                tag: form.tag
+            }
+            storeData(_data);
+        }
+    }
+    const storeData = async (value: any) => {
+        const products = await getData() || [];
+        products.push(value);
+        try {
+            const jsonValue = JSON.stringify(products);
+            await AsyncStorage.setItem('@products', jsonValue);
+            alert("Produit enregistrer avec succès !");
+        } catch (e) {
+            // saving error
+            console.log("adding product error => ", e);
+        }
+    }
+
+    const getData = async () => {
+        try {
+            const jsonValue = await AsyncStorage.getItem('@products')
+            console.log("get data -> ", JSON.parse(jsonValue || "{}"));
+            return jsonValue != null ? JSON.parse(jsonValue) : null;
+        } catch(e) {
+            // error reading value
+            console.log("get data error : ", e);
+        }
+    }
 
     if (hasPermission === null) {
     return <Text>Requesting for camera permission</Text>;
@@ -59,11 +109,11 @@ export const CreateProduct : React.FC = () => {
                     <Text style={styles.codebar}> {barcode} </Text>
                 </View>
                 
-                <Input placeholder='Numero de Comptoire' />
-                <Input placeholder='Equipement' />
-                <Input placeholder='Numero de serie' />
-                <Input placeholder='Asset Tag' />
-                <Button title='enregistrer' onPress={() => {}} />
+                <Input ky='nmrcmp' onChange={(key, value) => handleForm(key, value) } placeholder='Numero de Comptoire' />
+                <Input ky='equipement' onChange={(key, value) => handleForm(key, value) } placeholder='Equipement' />
+                <Input ky='nmrserie' onChange={(key, value) => handleForm(key, value) } placeholder='Numero de serie' />
+                <Input ky='tag' onChange={(key, value) => handleForm(key, value) } placeholder='Asset Tag' />
+                <Button title='enregistrer' onPress={() => handleSavingProduct()} />
             </View>
         </View>
     );

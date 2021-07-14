@@ -2,6 +2,9 @@ import React from "react";
 import { View, StyleSheet, Text, Dimensions, ScrollView } from 'react-native';
 import { Product } from '../components';
 import { BarCodeScanner } from 'expo-barcode-scanner';
+import { IProduct } from '../types/Product';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 
 const { width, height } = Dimensions.get('window');
@@ -11,13 +14,31 @@ export const ListProduct : React.FC = () => {
     const [hasPermission, setHasPermission] = React.useState<any>('');
     const [scanned, setScanned] = React.useState(false);
     const [barcode, SetBarcode] = React.useState<string>('');
+    const [products, SetProducts] = React.useState<IProduct[]>([]);
 
     React.useEffect(() => {
         (async () => {
-        const { status } = await BarCodeScanner.requestPermissionsAsync();
-        setHasPermission(status === 'granted');
+            SetProducts(await getData());
+            console.log("products => ", products);
+            const { status } = await BarCodeScanner.requestPermissionsAsync();
+            setHasPermission(status === 'granted');
         })();
+        
     }, []);
+
+    
+
+    // get data 
+    const getData = async () => {
+        try {
+            const jsonValue = await AsyncStorage.getItem('@products')
+            console.log("get data -> ", JSON.parse(jsonValue || "{}"));
+            return jsonValue != null ? JSON.parse(jsonValue) : null;
+        } catch(e) {
+            // error reading value
+            console.log("get data error : ", e);
+        }
+    }
 
     const handleBarCodeScanned = ({ type, data } : {type: any, data: any}) => {
         setScanned(true);
@@ -56,12 +77,15 @@ export const ListProduct : React.FC = () => {
             <View style={styles.listContainer}>
                 <ScrollView>
                     
-                    <Product />
-                    <Product />
-                    <Product />
-                    <Product />
-                    <Product />
-                    <Product />
+                    {
+                        products ? 
+                            products.map((product, key) => (
+                                <Product key={key} codebar={product.codebar} equipement={product.equipement} nmrcmp={product.nmrcmp} tag={product.tag} nmrserie={product.nmrserie} />
+                            ))
+                        : null
+                        
+                    }
+                    
 
                 </ScrollView>
                 
