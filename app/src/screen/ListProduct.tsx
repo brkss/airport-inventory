@@ -1,13 +1,17 @@
 import React from "react";
-import { View, StyleSheet, Text, Dimensions, ScrollView } from 'react-native';
+import { View, StyleSheet, Text, Dimensions, ScrollView, RefreshControl } from 'react-native';
 import { Product } from '../components';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { IProduct } from '../types/Product';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
+const wait = (timeout: any) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+}
+  
 
 const { width, height } = Dimensions.get('window');
+
 export const ListProduct : React.FC = () => {
 
 
@@ -15,6 +19,14 @@ export const ListProduct : React.FC = () => {
     const [scanned, setScanned] = React.useState(false);
     const [barcode, SetBarcode] = React.useState<string>('');
     const [products, SetProducts] = React.useState<IProduct[]>([]);
+    const [refreshing, setRefreshing] = React.useState(false);
+
+    
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        SetProducts(await getData());
+        wait(2000).then(() => setRefreshing(false));
+    }, []);
 
     React.useEffect(() => {
         (async () => {
@@ -75,7 +87,16 @@ export const ListProduct : React.FC = () => {
         
            {/*  {scanned && <Button style={{marginHorizontal: 20}} title={'Tap to Scan Again'} onPress={() => setScanned(false)} />} */}
             <View style={styles.listContainer}>
-                <ScrollView>
+                <ScrollView
+                style={{height: (height / 2) + 100,}}
+                    refreshControl={
+                        <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={onRefresh}
+                        />
+                    }
+                    
+                >
                     
                     {
                         products ? 
@@ -117,5 +138,5 @@ const styles = StyleSheet.create({
     listContainer: {
         paddingVertical: 30,
         marginBottom: 50
-    }
+    },
 });
