@@ -4,4 +4,5 @@ export interface IProduct {
     nmrserie: string;
     tag: string;
     codebar: string;
+    post? : string;
 }

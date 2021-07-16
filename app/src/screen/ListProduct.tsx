@@ -1,14 +1,41 @@
 import React from "react";
-import { View, StyleSheet, Text, Dimensions, ScrollView, RefreshControl } from 'react-native';
+import { View, StyleSheet, Text, Dimensions, ScrollView, RefreshControl, TextInput, Platform } from 'react-native';
 import { Product } from '../components';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { IProduct } from '../types/Product';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Button } from '../components';
+import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system';
+import * as Permissions from 'expo-permissions';
+import * as Sharing from 'expo-sharing';
 
 const wait = (timeout: any) => {
     return new Promise(resolve => setTimeout(resolve, timeout));
 }
-  
+
+const data : IProduct[] = [
+    {
+        codebar: '88394893843',
+        equipement: '999',
+        nmrcmp: '3948923849',
+        nmrserie: '234234234',
+        tag: 'PC POSRTABLE',
+    },
+    {
+        codebar: '0710909000093',
+        equipement: '999',
+        nmrcmp: '3948923849',
+        nmrserie: '234234234',
+        tag: 'KILINX!!',
+    },
+    {
+        codebar: '8697656232897',
+        equipement: '999',
+        nmrcmp: '3948923849',
+        nmrserie: '234234234',
+        tag: 'RI7A !!',
+    },
+]
 
 const { width, height } = Dimensions.get('window');
 
@@ -16,63 +43,79 @@ export const ListProduct : React.FC = () => {
 
 
     const [hasPermission, setHasPermission] = React.useState<any>('');
+    const [hasMediaPermission, SetHasMediaPermission] = React.useState<any>('');
     const [scanned, setScanned] = React.useState(false);
     const [barcode, SetBarcode] = React.useState<string>('');
-    const [products, SetProducts] = React.useState<IProduct[]>([]);
+    const [selectedProducts, SetSelectedProducts] = React.useState<IProduct[]>([]);
     const [refreshing, setRefreshing] = React.useState(false);
-
-    
-    const onRefresh = React.useCallback(async () => {
-        setRefreshing(true);
-        SetProducts(await getData());
-        wait(2000).then(() => setRefreshing(false));
-    }, []);
 
     React.useEffect(() => {
         (async () => {
-            SetProducts(await getData());
-            console.log("products => ", products);
+            const mediaPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
             const { status } = await BarCodeScanner.requestPermissionsAsync();
             setHasPermission(status === 'granted');
+            SetHasMediaPermission(mediaPermission.status === 'granted');
         })();
         
     }, []);
 
+    const downloadFile = () => {
+        //const uri = "http://techslides.com/demos/sample-videos/small.mp4"
+        const uri = "http://www.africau.edu/images/default/sample.pdf"
+        let fileUri = FileSystem.documentDirectory + "sample.pdf";
+        FileSystem.downloadAsync(uri, fileUri)
+        .then(async ({ uri }) => {
+            if(Platform.OS === 'ios'){
+                if(fileUri.endsWith('pdf')){
+                    const shareResult = await Sharing.shareAsync(fileUri, {UTI: "public.document"});
+                    return;
+                }
+            }
+            saveFile(uri);
+          })
+          .catch(error => {
+            console.error(error);
+          })
+    }
     
-
-    // get data 
-    const getData = async () => {
-        try {
-            const jsonValue = await AsyncStorage.getItem('@products')
-            console.log("get data -> ", JSON.parse(jsonValue || "{}"));
-            return jsonValue != null ? JSON.parse(jsonValue) : null;
-        } catch(e) {
-            // error reading value
-            console.log("get data error : ", e);
+    const saveFile = async (fileUri: string) => {
+        const { status } = await Permissions.askAsync(Permissions.CAMERA_ROLL);
+        if (status === "granted") {
+            const asset = await MediaLibrary.createAssetAsync(fileUri)
+            await MediaLibrary.createAlbumAsync("Download", asset, false)
         }
     }
+
+    const onRefresh = React.useCallback(async () => {
+        setRefreshing(true);
+        wait(2000).then(() => setRefreshing(false));
+    }, []);
+
+    
+    
+
+    
 
     const handleBarCodeScanned = ({ type, data } : {type: any, data: any}) => {
         setScanned(true);
         SetBarcode(data);
         alert(`Bar code  ${data} a été scanné !`);
+        wait(1000).then(() => setScanned(false));
     };
 
-    const deleteProduct = async (codebar: string) => {
-        try {
-            const jsonValue = await AsyncStorage.getItem('@products')
-            const products = JSON.parse(jsonValue || "{}");
-            const product = products.find((p: IProduct) => p.codebar === codebar) as IProduct;
-            if (product) {
-                products.splice(products.indexOf(product), 1);
-                await AsyncStorage.setItem('@products', JSON.stringify(products));
-                alert(`Le produit ${product.tag} a été supprimé !`);
-                SetProducts(await getData());
-            }
-        }
-        catch(e) {
-            console.log("delete product error : ", e);
-        }
+    const selectProduct = async (codebar: string) => {
+        const _product = data.find(product => product.codebar === codebar);
+        if(_product && !selectedProducts.find(product => product.codebar === codebar)){
+            alert("produit selectioner !");
+            SetSelectedProducts(prev => [...prev, _product]);
+        } 
+    }
+    const unselectProduct = (codebar: string) => {
+        const _product = selectedProducts.find(product => product.codebar === codebar);
+        if(_product){
+            SetSelectedProducts(prev => prev.filter(product => product.codebar !== codebar));
+        } 
+    
     }
 
     if (hasPermission === null) {
@@ -84,6 +127,7 @@ export const ListProduct : React.FC = () => {
 
     return(
         <View style={styles.container}>
+            
             <View style={styles.cameraContainer}>
                 {
                     // @ts-ignore
@@ -101,36 +145,48 @@ export const ListProduct : React.FC = () => {
                 }
                 
             </View>
-        
+                
            {/*  {scanned && <Button style={{marginHorizontal: 20}} title={'Tap to Scan Again'} onPress={() => setScanned(false)} />} */}
             <View style={styles.listContainer}>
+                <Text onPress={() => downloadFile()} style={{textAlign: 'center', fontWeight: 'bold', marginBottom: 10}}>{scanned ? barcode : 'Ready To Scand'}</Text>
                 {
-                    barcode  && products.find((p: IProduct) => p.codebar === barcode) ? 
-                    <Product product={products.find((p: IProduct) => p.codebar === barcode)!} onDelete={(barcode) => deleteProduct(barcode)} /> : 
-
-                    <ScrollView
-                        style={{height: (height / 2) + 100,}}
-                        refreshControl={
-                            <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            />
-                        }
-                        
-                    >
-                        
-                        {
-                            products ? 
-                                products.map((product, key) => (
-                                    <Product key={key} onDelete={(codeBar: string) => {deleteProduct(codeBar)} } product={product} />
-                                ))
-                            : null
-                            
-                        }
-                        
-
-                    </ScrollView>
+                    barcode  && data.find((p: IProduct) => p.codebar === barcode) ? 
+                    <Product product={data.find((p: IProduct) => p.codebar === barcode)!} onDelete={(barcode) => selectProduct(barcode)} /> 
+                    : null 
                 }
+                
+                {
+                    selectedProducts.length > 0 ? 
+                    <View>
+                        <TextInput style={{fontSize: 20, marginHorizontal: 10, marginVertical: 10, marginBottom: 0}} placeholder="Numero du comptoire" /> 
+                        <Button onPress={() => {}}  title="Enregistrer" style={{marginHorizontal: 10}} />
+                        <ScrollView
+                                style={{height: (height / 2) + 100, paddingBottom: 500, marginBottom: 0}}
+                                refreshControl={
+                                    <RefreshControl
+                                    refreshing={refreshing}
+                                    onRefresh={onRefresh}
+                                    />
+                                }
+                                
+                            >
+                                
+                                {
+                                    
+                                        selectedProducts.map((product, key) => (
+                                            <Product key={key} onDelete={(codeBar: string) => {unselectProduct(codeBar)} } product={product} />
+                                        ))
+                                    
+                                    
+                                }
+                               
+                                
+
+                        </ScrollView>
+                    </View>
+                    : null
+                }
+            
                 
                 
             </View>
