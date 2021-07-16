@@ -58,6 +58,23 @@ export const ListProduct : React.FC = () => {
         alert(`Bar code  ${data} a été scanné !`);
     };
 
+    const deleteProduct = async (codebar: string) => {
+        try {
+            const jsonValue = await AsyncStorage.getItem('@products')
+            const products = JSON.parse(jsonValue || "{}");
+            const product = products.find((p: IProduct) => p.codebar === codebar) as IProduct;
+            if (product) {
+                products.splice(products.indexOf(product), 1);
+                await AsyncStorage.setItem('@products', JSON.stringify(products));
+                alert(`Le produit ${product.tag} a été supprimé !`);
+                SetProducts(await getData());
+            }
+        }
+        catch(e) {
+            console.log("delete product error : ", e);
+        }
+    }
+
     if (hasPermission === null) {
     return <Text>Requesting for camera permission</Text>;
     }
@@ -87,28 +104,34 @@ export const ListProduct : React.FC = () => {
         
            {/*  {scanned && <Button style={{marginHorizontal: 20}} title={'Tap to Scan Again'} onPress={() => setScanned(false)} />} */}
             <View style={styles.listContainer}>
-                <ScrollView
-                style={{height: (height / 2) + 100,}}
-                    refreshControl={
-                        <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        />
-                    }
-                    
-                >
-                    
-                    {
-                        products ? 
-                            products.map((product, key) => (
-                                <Product key={key} codebar={product.codebar} equipement={product.equipement} nmrcmp={product.nmrcmp} tag={product.tag} nmrserie={product.nmrserie} />
-                            ))
-                        : null
-                        
-                    }
-                    
+                {
+                    barcode  && products.find((p: IProduct) => p.codebar === barcode) ? 
+                    <Product product={products.find((p: IProduct) => p.codebar === barcode)!} onDelete={(barcode) => deleteProduct(barcode)} /> : 
 
-                </ScrollView>
+                    <ScrollView
+                        style={{height: (height / 2) + 100,}}
+                        refreshControl={
+                            <RefreshControl
+                            refreshing={refreshing}
+                            onRefresh={onRefresh}
+                            />
+                        }
+                        
+                    >
+                        
+                        {
+                            products ? 
+                                products.map((product, key) => (
+                                    <Product key={key} onDelete={(codeBar: string) => {deleteProduct(codeBar)} } product={product} />
+                                ))
+                            : null
+                            
+                        }
+                        
+
+                    </ScrollView>
+                }
+                
                 
             </View>
         </View>

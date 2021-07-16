@@ -1,11 +1,15 @@
 import React from "react";
-import { View, StyleSheet, Text, Dimensions } from 'react-native';
+import { View, StyleSheet, Text, Dimensions, ScrollView, Platform, KeyboardAvoidingView } from 'react-native';
 import { Input, Button } from '../components';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { IProduct } from '../types/Product';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width, height } = Dimensions.get('window');
+const wait = (timeout: any) => {
+    return new Promise(resolve => setTimeout(resolve, timeout));
+}
+  
 export const CreateProduct : React.FC = () => {
 
 
@@ -25,8 +29,11 @@ export const CreateProduct : React.FC = () => {
         setScanned(true);
         SetBarcode(data);
         alert(`Bar code  ${data} a été scanné !`);
+        wait(2500).then(() => setScanned(false));   
     };
 
+
+    
     // handle product form 
     const handleForm = (key: string, value: string) => {
         console.log(`${key} : ${value}`);
@@ -38,11 +45,11 @@ export const CreateProduct : React.FC = () => {
     // handle saving product 
     const handleSavingProduct = () => {
         console.log("form -> ", form);
-        if(!form || !form.nmrcmp || !form.equipement || !form.nmrserie || !form.tag){
+        if(!form || !form.nmrcmp || !form.equipement || !form.nmrserie || !form.tag || !barcode){
             alert("Champs manquants !");
         }else{
             const _data : IProduct = {
-                codebar: barcode || '-0',
+                codebar: barcode ,
                 equipement: form.equipement,
                 nmrcmp: form.nmrcmp,
                 nmrserie: form.nmrserie,
@@ -108,12 +115,47 @@ export const CreateProduct : React.FC = () => {
                     <Text style={styles.label}> Bar Code  </Text>
                     <Text style={styles.codebar}> {barcode} </Text>
                 </View>
+                {
+                    Platform.OS === 'android' ? (
+                        <KeyboardAvoidingView behavior="padding">
+                            <ScrollView
+                                showsVerticalScrollIndicator={false}
+                                style={{
+                                    flex: 0,
+                                }}
+                                contentContainerStyle={{
+                                    flexGrow: 1,
+                                }}>
+
+                                <Input ky='nmrcmp' onChange={(key, value) => handleForm(key, value) } placeholder='Numero de Comptoire' />
+                                <Input ky='equipement' onChange={(key, value) => handleForm(key, value) } placeholder='Equipement' />
+                                <Input ky='nmrserie' onChange={(key, value) => handleForm(key, value) } placeholder='Numero de serie' />
+                                <Input ky='tag' onChange={(key, value) => handleForm(key, value) } placeholder='Asset Tag' />
+                                <Button title='enregistrer' onPress={() => handleSavingProduct()} />
+
+                            </ScrollView>
+                        </KeyboardAvoidingView>
+                    ) : 
+                        <ScrollView
+                            showsVerticalScrollIndicator={false}
+                            style={{
+                                flex: 0,
+                            }}
+                            contentContainerStyle={{
+                                flexGrow: 1,
+                            }}>
+
+                            <Input ky='nmrcmp' onChange={(key, value) => handleForm(key, value) } placeholder='Numero de Comptoire' />
+                            <Input ky='equipement' onChange={(key, value) => handleForm(key, value) } placeholder='Equipement' />
+                            <Input ky='nmrserie' onChange={(key, value) => handleForm(key, value) } placeholder='Numero de serie' />
+                            <Input ky='tag' onChange={(key, value) => handleForm(key, value) } placeholder='Asset Tag' />
+                            <Button title='enregistrer' onPress={() => handleSavingProduct()} />
+
+                        </ScrollView>
+                    
+                }
                 
-                <Input ky='nmrcmp' onChange={(key, value) => handleForm(key, value) } placeholder='Numero de Comptoire' />
-                <Input ky='equipement' onChange={(key, value) => handleForm(key, value) } placeholder='Equipement' />
-                <Input ky='nmrserie' onChange={(key, value) => handleForm(key, value) } placeholder='Numero de serie' />
-                <Input ky='tag' onChange={(key, value) => handleForm(key, value) } placeholder='Asset Tag' />
-                <Button title='enregistrer' onPress={() => handleSavingProduct()} />
+                
             </View>
         </View>
     );

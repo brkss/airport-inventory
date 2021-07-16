@@ -1,16 +1,20 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { IProduct } from '../types/Product';
 
-export const Product : React.FC<IProduct> = (props) => {
+interface Props {
+    product: IProduct;
+    onDelete : (codeBar: string) => void;
+}
 
+export const Product : React.FC<Props> = (props) => {
 
-
+    
     return (
-        <View style={styles.container}>
-            <Text style={styles.codeBar}>{props.codebar}</Text>
-            <Text style={styles.title}>{props.tag}</Text>
-        </View>
+        <TouchableOpacity onLongPress={() => props.onDelete(props.product.codebar)} style={styles.container}>
+            <Text style={styles.codeBar}>{props.product.codebar}</Text>
+            <Text style={styles.title}>{props.product.tag}</Text>
+        </TouchableOpacity>
     );
 }
 
