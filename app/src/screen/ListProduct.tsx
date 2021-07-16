@@ -43,7 +43,7 @@ export const ListProduct : React.FC = () => {
 
 
     const [hasPermission, setHasPermission] = React.useState<any>('');
-    const [hasMediaPermission, SetHasMediaPermission] = React.useState<any>('');
+    const [nmrComptoire, setNmrComptoire] = React.useState<any>('');
     const [scanned, setScanned] = React.useState(false);
     const [barcode, SetBarcode] = React.useState<string>('');
     const [selectedProducts, SetSelectedProducts] = React.useState<IProduct[]>([]);
@@ -54,24 +54,53 @@ export const ListProduct : React.FC = () => {
             const mediaPermission = await Permissions.askAsync(Permissions.CAMERA_ROLL);
             const { status } = await BarCodeScanner.requestPermissionsAsync();
             setHasPermission(status === 'granted');
-            SetHasMediaPermission(mediaPermission.status === 'granted');
+            
         })();
         
     }, []);
 
+    //create csv 
+    const createCsv = (_data: any[]) => {
+        var json = _data
+        var fields = Object.keys(json[0])
+        // @ts-ignore
+        var replacer = function(key: any, value: any) { return value === null ? '' : value } 
+        var csv = json.map(function(row: any){
+            return fields.map(function(fieldName){
+                return JSON.stringify(row[fieldName], replacer)
+            }).join(';')
+        }) as any;
+        csv.unshift(fields.join(';')) // add header column
+        csv = csv.join('\r\n');
+        return csv; 
+    }
+
     const downloadFile = () => {
-        //const uri = "http://techslides.com/demos/sample-videos/small.mp4"
-        const uri = "http://www.africau.edu/images/default/sample.pdf"
-        let fileUri = FileSystem.documentDirectory + "sample.pdf";
-        FileSystem.downloadAsync(uri, fileUri)
-        .then(async ({ uri }) => {
+
+        if(!nmrComptoire){
+            alert('Veuillez entrer un numéro de comptoir');
+            return;
+        }
+        const _data = selectedProducts.map(product => {
+            return {
+                "Code Bar": product.codebar,
+                "Equipement": product.equipement,
+                "Numero Comptoire": nmrComptoire,
+                "Numero de serie": product.nmrserie,
+                "Asset Tag": product.tag,
+            }
+        });
+        //const uri = "http://www.africau.edu/images/default/sample.pdf"
+        let fileUri = FileSystem.documentDirectory + `${Date.now()}_sita.csv`;
+        FileSystem.writeAsStringAsync(fileUri, createCsv(_data))
+        .then(async () => {
             if(Platform.OS === 'ios'){
-                if(fileUri.endsWith('pdf')){
+                if(fileUri.endsWith('csv')){
                     const shareResult = await Sharing.shareAsync(fileUri, {UTI: "public.document"});
                     return;
                 }
             }
-            saveFile(uri);
+            saveFile(fileUri);
           })
           .catch(error => {
             console.error(error);
@@ -158,8 +187,8 @@ export const ListProduct : React.FC = () => {
                 {
                     selectedProducts.length > 0 ? 
                     <View>
-                        <TextInput style={{fontSize: 20, marginHorizontal: 10, marginVertical: 10, marginBottom: 0}} placeholder="Numero du comptoire" /> 
-                        <Button onPress={() => {}}  title="Enregistrer" style={{marginHorizontal: 10}} />
+                        <TextInput onChangeText={value => setNmrComptoire(value)} style={{fontSize: 20, marginHorizontal: 10, marginVertical: 10, marginBottom: 0}} placeholder="Numero du comptoire" /> 
+                        <Button onPress={() => downloadFile()}  title="Enregistrer" style={{marginHorizontal: 10}} />
                         <ScrollView
                                 style={{height: (height / 2) + 100, paddingBottom: 500, marginBottom: 0}}
                                 refreshControl={
